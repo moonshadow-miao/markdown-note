@@ -88,7 +88,158 @@ setTimeout(),setInterval(),setImmediate(),process.nextTick()
 ![利用node构建web服务器](http://oy99ekzhi.bkt.clouddn.com/9.png)
 	
 #异步编程
-**高阶函数** :高阶函数可以把函数作为参数,或是将函数作为返回值的函数  
+**高阶函数** :高阶函数可以把函数作为参数,或是将函数作为返回值的函数 
+##难点:  
+1. 异常处理: 异步I/O的实现主要包括两个阶段,提交请求和处理结果,异步方法通常在提交请求时直接返回,这个时候无法捕获后面阶段的异常(如:回调执行时候抛出的异常).所以, node在处理异常上形成一种约定,将异常作为回调函数的第一个实参传回,如果是空值,表明异步调用没有异常抛出.
+2. 函数嵌套过深
+3. 没有阻塞代码:sleep()线程沉睡代码在js中没有,可以setTimeout替代
+4. 多线程编程
+5. 异步转同步,node中也会提供部分同步API
+
+##异步编程解决方案
+###事件发布/订阅模式
+node自身提供的events模块,具有addListener()/on() ,once(), removeListener() ,removeAllListener(),emit().等方法.示例:
+
+	// 订阅
+	emitter.on("event1", function (message) {
+		console.log(message);
+	});
+	// 发布
+	emitter.emit('event1', "I am message!");
+发布/订阅模式可以实现一个事件和多个回调函数的关联,**这些回调函数又称为事件侦听器** .这种模式常常用来解耦业务逻辑,事件发布者无须关注订阅的侦听器如何实现业务逻辑,不用关注多少个侦听器存在,数据通过消息的方式灵活的传递.  
+在一些场景中,将不变的部分封装在组件中,将变化的部分暴露给外部处理,此处事件订阅的设计就是组件的接口设计.  
+从另一个角度看,事件侦听模式也是一种钩子函数,利用钩子导出内部数据或者状态给外部,不用关注组件如何启动和执行,只需关注需要事件点(钩子函数触发).  
+	
+	var options = {
+		host: 'www.google.com',port: 80,path: '/upload',method: 'POST'
+	};
+	var req = http.request(options, function (res) {
+		console.log('STATUS: ' + res.statusCode);
+		console.log('HEADERS: ' + JSON.stringify(res.headers));
+		res.setEncoding('utf8');
+		res.on('data', function (chunk) {
+		console.log('BODY: ' + chunk);
+	});
+	res.on('end', function () {
+		// TODO
+		});
+	});
+	req.on('error', function (e) {
+		console.log('problem with request: ' + e.message);
+	});
+	req.write('data\n');
+	req.end();
+上述代码中,我们只需要关心error,data,end这些事件如何处理,无须关心内部的流程.
+node对事件发布/订阅的机制做了额外的处理:
+
+- 如果对一个事件添加了超过10个侦听器,将会得到一条警告,可以调用setMaxListeners(0)移除警告.
+- 为了处理异常,EventEmitter对象检查是否有error事件侦听,如有则将错误抛给侦听器处理,否则抛出异常导致线程退出.
+***
+	var proxy = new events.EventEmitter();
+	var status = "ready";
+	var select = function (callback) {
+		proxy.once("selected", callback);
+		if (status === "ready") {
+		status = "pending";
+		db.select("SQL", function (results) {
+			proxy.emit("selected", results);
+			status = "ready";
+			});
+		}
+	};
+	这里多次调用select()时,利用once方法将所有的请求回调压入事件队列总,利用其执行一次就会将监视器移除的特点,保证每一个回调只会被执行一次.对于相同的sql语句,同一时间只会有一个查询执行,一旦查询结束,得到的结果可以被所有的相同调用共用.
+***
+###多异步之间的协作方案:
+异步编程中,也会出现事件和侦听器的关系是多对一的情况,一个业务逻辑可能依赖多个回调执行后的结果.   
+业务场景例子: 模版读取 + 数据读取 + 本地资源读取 => 渲染页面    
+
+	var count = 0;
+	var results = {};
+	var done = function (key, value) {
+		results[key] = value;
+		count++;
+		if (count === 3) {
+		// 渲染页面
+		render(results);
+		}
+	};
+	fs.readFile(template_path, "utf8", function (err, template){
+		done("template", template);
+	});
+	db.query(sql, function (err, data) {
+		done("data", data);
+	});
+	l10n.get(function (err, resources) {
+		done("resources", resources);
+	});
+	// 借助哨兵变量(此处用来检测次数的变量)处理异步协作的结果
+	
+	var after = function (times, callback) {
+		var count = 0, results = {};
+		return function (key, value) {
+					results[key] = value;
+					count++;
+					if (count === times) {
+					callback(results);
+					}
+				};
+	};
+	var done = after(times, render);
+	var emitter = new events.Emitter();
+	emitter.on("done", done);
+	fs.readFile(template_path, "utf8", function (err, template) {
+		emitter.emit("done", "template", template);
+	});
+	db.query(sql, function (err, data) {
+		emitter.emit("done", "data", data);
+	});
+	l10n.get(function (err, resources) {
+	emitter.emit("done", "resources", resources);
+	});
+	// 借助偏函数处理哨兵变量和第三方函数的关系
+
+###promise/deferred模式
+通过node的events模块完成promiss的实现
+
+	var Promise = function(){
+		EventEmitter.call(this);
+	}
+	Util.inherits(Promise,EventEmitter);
+	Promise.prototype.then = function(fulfilledHandler, errorHandler, progressHandler) {
+		if(typeof fulfilledHandler === 'function'){
+			// 利用once方法,保证成功回调只执行一次
+			this.once('success',fulfilledHandler);
+		}
+		if(typeof errorHandler === 'function'){
+			this.once('error',errorHandler);
+		}
+		if(typeof progressHandler === 'function'){
+			this.once('progress',progressHandler);
+		}
+		return this
+	};
+	var Deferred = function(){
+		this.state = 'unfulfilled';
+		this.promise = new Promise();
+	};
+	Deferred.prototype.resolve = function (obj){
+		this.state = 'fulfilled';
+		this.promise.emit('success',obj);
+	};
+	Deferred.prototype.reject = function (obj){
+		this.state = 'failed';
+		this.promise.emit('error',obj);
+	};
+	Deferred.prototype.progress = function (obj){
+		this.promise.emit('progress',obj);
+	}
+
+
+	
+
+
+	
+
 
 
 
