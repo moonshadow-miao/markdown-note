@@ -15,7 +15,7 @@ npm项目搭建:
 - npm init 生成package.json
 - 安装webpck插件webpack-dev-server(本地开发环境的服务器) 和 webpack,可以npm i webpack webpack-dev-server --save-dev来同时安装这两个插件
 - --save和--save-dev的区别:分别将依赖记录到dependencies和devDependencies下面,前者记录是项目在运行是必须依赖的插件,需要打包上线的,后者只在开发中使用的插件
-- scripts: 脚本代码,npm start和npm test是npm run start ,npm run test的简写
+- scripts: 脚本代码(命令行),npm start和npm test是npm run start ,npm run test的简写,npm start :'webpack-dev-server --progess --colors --hot --inline -d'(-d ,dug模式),npm build:'webpack -progess --colors -p'(-p,调用unflifyJs压缩)
 - npm i 安装项目依赖
 
 ###webpack.config.js:

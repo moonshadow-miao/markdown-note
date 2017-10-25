@@ -13,3 +13,10 @@
 - 关于 defer，它是按照加载顺序执行脚本的,async则是乱序执行,不管声明的顺序如何，只要加载完了就会立刻执行
 
 书签:p38
+
+undefined与null的区别:  
+
+- 在 if 中，undefined 和 null 都自动转译为 false。
+- 在转换为数字的过程中，undefined 转译为 NaN， null 转译为0。
+- null 表示"没有对象"，即该处不应该有值。
+- undefined 表示"缺少值"，就是此处应该有一个值，但是还没有定义。
