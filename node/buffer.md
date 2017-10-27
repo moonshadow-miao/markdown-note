@@ -107,5 +107,49 @@ buffer在使用场景中,通常是以一段一段的方式传输.
 		console.log(data);
 	});
 	
+上述代码中,data += chunk;隐藏了toString()操作,它等价于 ** data = data.toString() + chunk.toString() ** . 在出现宽字节(如中文,占三个字节), 如果每次读取的buffer将汉子的三个字节被截断,只读到一个字节或者两个字节,toString()的时候就显示乱码.   
+可以通过setEncoding(),将上述代码改进:
 
+	var fs = require('fs');
+	var rs = fs.createReadStream('test.md');
+	rs.setEncoding('utf8');    // 新增
+	var data = '';
+	rs.on("data", function (chunk){
+		data += chunk;	
+	});
+	rs.on("end", function () {
+		console.log(data);
+	});
 
+这里,在调用setEncoding()时候,可读流对象在内部设置了一个decoder对象,每次data事件都通过该decoder对象进行Buffer到字符串到解码,然后传递给调用者.  
+	
+	var StringDecoder = require('string_decoder').StringDecoder;
+	var decoder = new StringDecoder('utf8');
+	var buf1 = new Buffer([0xE5, 0xBA, 0x8A, 0xE5, 0x89, 0x8D, 0xE6, 0x98, 0x8E, 0xE6, 0x9C]);
+	console.log(decoder.write(buf1));
+	// => 窗前明
+	var buf2 = new Buffer([0x88, 0xE5, 0x85, 0x89, 0xEF, 0xBC, 0x8C, 0xE7, 0x96, 0x91, 0xE6]);
+	console.log(decoder.write(buf2));
+	// => 月光,疑
+
+StringDecoder在得到编码后,只会输出前九个字节转码成汉字,剩余两个字节保留在StringDecoder实例内部,第二次,剩余的两个字节和后续的11个字节正常转码成汉字. 目前只能处理UTF-8,Base64和UCS-2/UTF-16LE这三种编码.
+
+###正确拼接Buffer
+正确的拼接方式是用一个数组来存储收到的所有buffer片段,(之前是每次收到一次buffer片段立即写入),然后调用Buffer.concat()方法生成一个合并后的大Buffer.再一次性写入
+
+	var chunks = [];
+	var size = 0;
+	res.on('data', function (chunk) {
+	chunks.push(chunk);
+		size += chunk.length;
+	});
+	res.on('end', function () {	
+		var buf = Buffer.concat(chunks, size);
+		var str = iconv.decode(buf, 'utf8');
+		console.log(str);
+	});
+
+Buffer.concat(list , [totalLength]);
+
+- list:用于合并的buffer对象 **数组**列表
+- totalLenght:指定合并后buffer对象的总长度
