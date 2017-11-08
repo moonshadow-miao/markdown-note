@@ -119,5 +119,35 @@ ES6中,允许按照一定模式,从数组和对象中提取值,对变量进行�
 	let y = 2;
 	[x, y] = [y, x]; 
 
-(2) 
+(2) 从函数返回多个值
+
+	function example() {
+  		return {
+    		foo: 1,
+    		bar: 2
+  		};
+	}
+	let { foo, bar } = example();
+
+(3) 函数参数的定义
+
+	function f({x, y, z}) { ... }
+	f({z: 3, y: 2, x: 1});
+
+(4) 提取JSON数据
+
+	let jsonData = {
+  		id: 42,
+  		status: "OK",
+  		data: [867, 5309]
+	};
+	let { id, status, data: number } = jsonData;
+
+(5) 遍历Map结构 :Map结构原生支持Iterator接口，配合变量的解构赋值，获取键名和键值就非常方便。
 	
+	const map = new Map();
+	map.set('first', 'hello');
+	map.set('second', 'world');
+	for (let [key, value] of map) {
+  		console.log(key + " is " + value);
+	}
