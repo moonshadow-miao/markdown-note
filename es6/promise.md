@@ -120,6 +120,144 @@ Promise.resolve方法的参数分成四种情况:
 	// 立即resolved的Promise对象,是在本轮'事件循环'(event loop)的结束时,而不是在下一轮'事件循环的'开始
 ###Promise.reject()
 Promise.reject方法返回一个新的Promise实例,该实例的状态是rejected
+#promise的联系题
+ 	const promise = new Promise((resolve,reject) => {
+  		console.log(1)
+  		resolve()
+  		console.log(2)
+	})
+	promise.then(() => {
+	  console.log(3)
+	})
+	console.log(4);
+	
+	// 输出结果是:  1 2 4 3
+	// Promise 构造函数是同步执行的，promise.then 中的函数是异步执行的。
+***
+	const promise1 = new Promise((resolve, reject) => {
+	  setTimeout(() => {
+	    resolve('success')
+	  }, 1000)
+	})
+	const promise2 = promise1.then(() => {
+	  throw new Error('error!!!')
+	})
+	
+	console.log('promise1', promise1)
+	console.log('promise2', promise2)
+	
+	setTimeout(() => {
+	  console.log('promise1', promise1)
+	  console.log('promise2', promise2)
+	}, 2000)
+	// 打印结果:    	promise1, promise pending
+					promise2, promise pending
+					promise1, promise reslove
+					promise2, promise reject
+***
+	const promise = new Promise((resolve, reject) => {
+	  resolve('success1')
+	  reject('error')
+	  resolve('success2')
+	})
+
+	promise
+	  .then((res) => {
+	    console.log('then: ', res)
+	  })
+	  .catch((err) => {
+	    console.log('catch: ', err)
+	  })
+	// 打印结果 then,success1
+	// 构造函数中的 resolve 或 reject 只有第一次执行有效，多次调用没有任何作用，呼应代码二结论：promise 状态一旦改变则不能再变。
+***
+	Promise.resolve(1).then((res) => {
+	    console.log(res)
+	    return 2
+	  })
+	  .catch((err) => {
+	    return 3
+	  })
+	  .then((res) => {
+	    console.log(res)
+	  })
+	// 打印结果:   1 2	
+*** 
+	const promise = new Promise((resolve, reject) => {
+	  setTimeout(() => {
+	    console.log('once')
+	    resolve('success')
+	  }, 1000)
+	})
+	
+	const start = Date.now()
+	promise.then((res) => {
+	  console.log(res, Date.now() - start)
+	})
+	promise.then((res) => {
+	  console.log(res, Date.now() - start)
+	})
+	// 打印结果 :  once
+				  success , 1002
+				  success , 1004		
+***
+	Promise.resolve()
+	  .then(() => {
+	    return new Error('error!!!')
+	  })
+	  .then((res) => {
+	    console.log('then: ', res)
+	  })
+	  .catch((err) => {
+	    console.log('catch: ', err)
+	  })
+	  // 打印结果   错误答案:   catch , error!!!		
+	正确:then: Error: error!!!
+    // 原因: .then 或者 .catch 中 return 一个 error 对象并不会抛出错误，所以不会被后续的 .catch 捕获，需要改成其中一种：
+	return Promise.reject(new Error('error!!!'))
+	throw new Error('error!!!')
+	返回任意一个非 promise 的值都会被包裹成 promise 对象，即 return new Error('error!!!') 等价于 return Promise.resolve(new Error('error!!!'))。
+***
+	const promise = Promise.resolve()
+	  .then(() => {
+	    return promise
+	  })
+	promise.catch(console.error)
+	// 打印结果: TypeError: Chaining cycle detected for promise #<Promise>
+***
+	Promise.resolve(1)
+	  .then(2)
+	  .then(Promise.resolve(3))
+	  .then(console.log)
+	// 打印结果: 1
+	// .then 或者 .catch 的参数期望是函数，传入非函数则会发生值穿透
+***
+	Promise.resolve()
+	  .then(function success (res) {
+	    throw new Error('error')
+	  }, function fail1 (e) {
+	    console.error('fail1: ', e)
+	  })
+	  .catch(function fail2 (e) {
+	    console.error('fail2: ', e)
+	  })
+ 	  // 打印结果: fail2, Error :error
+***
+	process.nextTick(() => {
+	  console.log('nextTick')
+	})
+	Promise.resolve()
+	  .then(() => {
+	    console.log('then')
+	  })
+	setImmediate(() => {
+	  console.log('setImmediate')
+	})
+	console.log('end')
+	// 打印结果: end, then , nextick ,setImmediate  // 错误
+	// 正确: end, nextTick, then ,setImmediate
+	//	process.nextTick 和 promise.then 都属于 microtask，而 setImmediate 属于 macrotask，在事件循环的 check 阶段执行。事件循环的每个阶段（macrotask）之间都会执行 microtask，事件循环的开始会先执行一次 microtask
+
 
 
 
