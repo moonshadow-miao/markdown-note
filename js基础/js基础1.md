@@ -14,7 +14,7 @@
 
 书签:p38
 
-undefined与null的区别:  
+###undefined与null的区别:  
 
 - 在 if 中，undefined 和 null 都自动转译为 false。
 - 在转换为数字的过程中，undefined 转译为 NaN， null 转译为0。
@@ -41,3 +41,52 @@ undefined与null的区别:
 - HTTP PATCH提供的实体需要根据程序或其它协议的定义，解析后在服务器上执行，以此来修改服务器上的资源。(换句话说，PATCH请求是会执行某个程序的，如果重复提交，程序可能执行多次，对服务器上的资源就可能造成额外的影响，这就可以解释它为什么是非幂等的了)
 - HTTP DELETE方法用于删除资源，会将资源删除。调用一次和多次对资源产生影响是相同的，所以也满足幂等性
 ##
+	var person1 = {
+        name: 'person1',
+        show1: function () {
+          console.log(this.name)
+        },
+        show2: () => console.log(this.name),
+        show3: function () {
+          return function () {
+            console.log(this.name)
+          }
+        },
+        show4: function () {
+          return () => console.log(this.name)
+        }
+      };
+      var person2 = { name: 'person2' };
+
+      person1.show1();   // person1
+      person1.show1.call(person2);  // person2
+
+      person1.show2();  // 'window'
+      person1.show2.call(person2);  // 'window'
+
+      person1.show3()();   // 'window'
+      person1.show3().call(person2);  // person2
+      person1.show3.call(person2)();   //  'window'
+
+      person1.show4()();   // 'person1'
+      person1.show4().call(person2);  // person1
+      person1.show4.call(person2)();  // person2
+##
+	var a=0;
+	function aa(a){
+	    alert(a)
+	    var a=3
+	}
+	aa(5)
+	alert(a)
+	//5,0   
+
+	var a=0;
+	function aa(){
+	    alert(a)
+	    var a=3
+	}
+	aa()
+	alert(a)
+	//undefined,0   
+##fetch
