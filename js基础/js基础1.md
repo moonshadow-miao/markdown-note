@@ -89,4 +89,106 @@
 	aa()
 	alert(a)
 	//undefined,0   
-##fetch
+##js原型的继承
+![图解构造器Function和Object的关系](http://oy99ekzhi.bkt.clouddn.com/js1.png)   
+###一.简单原型链
+拿父类实例来充当子类原型对象  
+	function Super(){      // 父类
+	    this.val = 1;
+	    this.arr = [1];
+	}
+	function Sub(){			// 子类
+	   
+	}
+	Sub.prototype = new Super();    // 核心 
+###二.借用构造函数
+	function Super(val){
+	    this.val = val;
+	    this.arr = [1];
+	    this.fun = function(){  }
+	}
+	function Sub(val){
+	    Super.call(this, val);   // 核心
+	    // ...
+	}
+	//借父类的构造函数来增强子类实例，等于是把父类的实例属性复制了一份给子类实例装上了（完全没有用到原型）
+###三.组合继承
+	function Super(){
+	    // 只在此处声明基本属性和引用属性
+	    this.val = 1;
+	    this.arr = [1];
+	}
+	//  在此处声明函数
+	Super.prototype.fun1 = function(){};
+	Super.prototype.fun2 = function(){};
+	//Super.prototype.fun3...
+	function Sub(){
+	    Super.call(this);   // 核心
+	    // ...
+	}
+	Sub.prototype = new Super();    // 核心
+	// 把实例函数都放在原型对象上，以实现函数复用。同时还要保留借用构造函数方式的优点，通过Super.call(this);继承父类的基本属性和引用属性并保留能传参的优点；通过Sub.prototype = new Super();继承父类函数，实现函数复用
+###四.寄生组合继承
+	function beget(obj){   
+	    var F = function(){};
+	    F.prototype = obj;
+	    return new F();
+	}
+	function Super(){
+	    // 只在此处声明基本属性和引用属性
+	    this.val = 1;
+	    this.arr = [1];
+	}
+	//  在此处声明函数
+	Super.prototype.fun1 = function(){};
+	Super.prototype.fun2 = function(){};
+	//Super.prototype.fun3...
+	function Sub(){
+	    Super.call(this);   // 核心
+	    // ...
+	}
+	var proto = beget(Super.prototype); // 核心
+	proto.constructor = Sub;            // 核心
+	Sub.prototype = proto;              // 核心
+	 
+	var sub = new Sub();
+	// 用beget(Super.prototype);切掉了原型对象上多余的那份父类实例属性
+	// 改变子类的原型对象(将父类的原型对象复制给一个新对象,再将新对象赋给子类的原型对象),在子类的构造函数中,通过call借用父类的构造函数继承
+	// beget个人觉得可以通过for in 循环向一个{}复制父类的原型对象
+###五.原型式
+	function beget(obj){   
+	    var F = function(){};
+	    F.prototype = obj;
+	    return new F();
+	}
+	function Super(){
+	    this.val = 1;
+	    this.arr = [1];
+	}
+	 
+	// 拿到父类对象
+	var sup = new Super();
+	// 生孩子
+	var sub = beget(sup);  
+###六.寄生式
+	function beget(obj){   // 生孩子函数 beget：龙beget龙，凤beget凤。
+	    var F = function(){};
+	    F.prototype = obj;
+	    return new F();
+	}
+	function Super(){
+	    this.val = 1;
+	    this.arr = [1];
+	}
+	function getSubObject(obj){
+	    // 创建新对象
+	    var clone = beget(obj); // 核心
+	    // 增强
+	    clone.attr1 = 1;
+	    clone.attr2 = 2;
+	    //clone.attr3...
+	 
+	    return clone;
+	}
+	 
+	var sub = getSubObject(new Super());
