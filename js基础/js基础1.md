@@ -192,3 +192,113 @@
 	}
 	 
 	var sub = getSubObject(new Super());
+##meta标签
+meta标签是HTML中head头部的一个辅助性标签,可分为两大部分：http-equiv 和 name 属性。
+   
+http-equiv：相当于http的文件头作用，它可以向浏览器传回一些有用的信息，以帮助浏览器正确地显示网页内容。    
+name属性：主要用于描述网页，与之对应的属性值为content，content中的内容主要是便于浏览器，搜索引擎等机器人识别，等等。
+
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<!-- 以上 3 个 meta 标签 *必须* 放在 head 的最前面；其他任何的 head 内容必须在这些标签的 *后面* -->
+ 
+	<!-- 允许控制资源的过度加载 -->
+	<meta http-equiv="Content-Security-Policy" content="script-src 'self'; style-src nos.netease.com kaola.com;">
+	上面的script-src代表脚本资源；style-src代表样式资源；'self'代表只信任当前域名下的外来资源，其他域下的资源全部会被拦截；nos.netease.com kaola.com代表信任nos.netease.com和kaola.com这两个域名下的资源。所以上面的标签的意义就是：对于脚本资源只信任本域下的，对于样式资源，除了本域还会加载nos.netease.com和kaola.com这两个域名下的。
+
+	<!-- 尽早地放置在文档中 -->
+	<!-- 仅应用于该标签下的内容 -->
+ 
+	<!-- Web 应用的名称（仅当网站被用作为一个应用时才使用）-->
+	<meta name="application-name" content="应用名称">
+	 
+	<!-- 针对页面的简短描述（限制 150 字符）-->
+	<!-- 在*某些*情况下，该描述是被用作搜索结果展示片段的一部分 -->
+	<meta name="description" content="一个页面描述">
+	 
+	<!-- 控制搜索引擎的抓取和索引行为 -->
+	<meta name="robots" content="index,follow,noodp"><!-- 所有的搜索引擎 -->
+	<meta name="googlebot" content="index,follow"><!-- 仅对 Google 有效 -->
+	 
+	<!-- 告诉 Google 不显示网站链接的搜索框 -->
+	<meta name="google" content="nositelinkssearchbox">
+	 
+	<!-- 告诉 Google 不提供此页面的翻译 -->
+	<meta name="google" content="notranslate">
+	 
+	<!-- 验证 Google 搜索控制台的所有权 -->
+	<meta name="google-site-verification" content="verification_token">
+ 
+	<!-- 用来命名软件或用于构建网页（如 - WordPress、Dreamweaver）-->
+	<meta name="generator" content="program">
+	 
+	<!-- 关于你的网站主题的简短描述 -->
+	<meta name="subject" content="你的网站主题">
+	 
+	<!-- 非常简短（少于 10 个字）的描述。主要用于学术论文。-->
+	<meta name="abstract" content="">
+	 
+	<!-- 完整的域名或网址 -->
+	<meta name="url" content="https://example.com/">
+	 
+	<meta name="directory" content="submission">
+	 
+	<!-- 基于网站内容给出一般的年龄分级 -->
+	<meta name="rating" content="General">
+	 
+	<!-- 允许控制 referrer 信息如何传递 -->
+	<meta name="referrer" content="never">
+	 
+	<!-- 禁用自动检测和格式化可能的电话号码 -->
+	<meta name="format-detection" content="telephone=no">
+	 
+	<!-- 通过设置为 “off” 完全退出 DNS 预取 -->
+	<meta http-equiv="x-dns-prefetch-control" content="off">
+	 
+	<!-- 在客户端存储 cookie，web 浏览器的客户端识别 -->
+	<meta http-equiv="set-cookie" content="name=value; expires=date; path=url">
+	 
+	<!-- 指定要显示在一个特定框架中的页面 -->
+	<meta http-equiv="Window-Target" content="_value">
+	 
+	<!-- 地理标签 -->
+	<meta name="ICBM" content="latitude, longitude">
+	<meta name="geo.position" content="latitude;longitude">
+	<!-- 国家代码 (ISO 3166-1): 强制性, 州代码 (ISO 3166-2): 可选; 如 content="US" / content="US-NY" -->
+	<meta name="geo.region" content="country[-state]">
+	<!-- 如 content="New York City" -->
+	<meta name="geo.placename" content="city/town">
+
+viewport :
+
+	<meta name ="viewport" content ="initial-scale=1, maximum-scale=3, minimum-scale=1, user-scalable=no"> <!-- `width=device-width` 会导致 iPhone 5 添加到主屏后以 WebApp 全屏模式打开页面时出现黑边 http://bigc.at/ios-webapp-viewport-meta.orz -->
+
+content 参数:
+***
+- width viewport 宽度(数值/device-width)
+- height viewport 高度(数值/device-height)
+- initial-scale 初始缩放比例
+- maximum-scale 最大缩放比例
+- minimum-scale 最小缩放比例
+- user-scalable 是否允许用户缩放(yes/no)
+
+SEO 优化部分
+***
+	<meta name="keywords" content="your keywords">
+	<meta name="description" content="your description">
+	<meta name="author" content="author,email address">
+	<meta name="robots" content="index,follow"> //定义网页搜索引擎索引方式，robotterms 是一组使用英文逗号「,」分割的值，通常有如下几种取值：none，noindex，nofollow，all，index和follow。
+	<meta http-equiv="Cache-Control" content="no-siteapp" />  // 通过百度手机打开网页时，百度可能会对你的网页进行转码，脱下你的衣服，往你的身上贴狗皮膏药的广告，为此可在 head 内添加
+##js中this
+this是Javascript语言的一个关键字。 
+es5它代表函数运行时，自动生成的一个内部对象，只能在函数内部使用。  
+es6的箭头函数中的this:箭头函数没有自己的this, 它的this是继承而来; 默认指向在定义它时,它所处的对象(宿主对象),而不是执行时的对象, 定义它的时候,可能环境是window.
+##js的执行环境
+![EC的组成](http://oy985wqks.bkt.clouddn.com/1.png)  
+
+- 变量对象（Variable object，VO）: 变量对象即包含变量的对象，除了我们无法访问它外，和普通对象没什么区别。
+- [[Scope]]属性:作用域即变量对象，作用域链是一个由变量对象组成的带头结点的单向链表，其主要作用就是用来进行变量查找。而[[Scope]]属性是一个指向这个链表头节点的指针。作用域链其实就相当于一个变量对象的集合，其第一个元素是当前执行环境的变量对象，最后一个元素是全局执行环境的变量对象（在浏览器中即window对象）。
+- this: 指向一个环境对象，注意是一个对象，而且是一个普通对象，而不是一个执行环境。
+
+
