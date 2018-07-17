@@ -191,13 +191,26 @@ CSS选择符有哪些？哪些属性可以继承？
 	});
 	console.log('h');
 ## 手写bind 
-	Function.prototype.bind = function (slef) {
-        var param = [].slice.call(arguments,1)
-        var fun = this
-        return function(){
-          fun.apply(slef,param)
-        }
-      }
+	Function.prototype.bind2 = function (context) {
+
+    if (typeof this !== "function") {
+      throw new Error("Function.prototype.bind - what is trying to be bound is not callable");
+    }
+
+    var self = this;
+    var args = Array.prototype.slice.call(arguments, 1);
+    var fNOP = function () {};
+
+    var fbound = function () {
+        self.apply(this instanceof self ? this : context, args.concat(Array.prototype.slice.call(arguments)));
+    }
+
+    fNOP.prototype = this.prototype;
+    fbound.prototype = new fNOP();
+
+    return fbound;
+
+}
 ## 浏览器的重绘和重排
 
 ![](https://pic1.zhimg.com/80/e8bc40d7006f13fa0a191d774b7db36a_hd.jpg)  
